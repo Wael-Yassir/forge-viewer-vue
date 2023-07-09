@@ -2,7 +2,7 @@ import { createStore } from 'vuex'
 
 export default createStore({
   state: {
-    primaryColor: '#2a73c5'
+    primaryColor: '#2a73c5',
   },
   getters: {
   },
