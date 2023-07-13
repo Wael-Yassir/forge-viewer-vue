@@ -24,7 +24,7 @@ const Authenticate = async () => {
       'Accept': 'application/json',
       'Authorization': `Basic ${authorization}`
     },
-    data : data
+    data: data
   };
 
   try {
@@ -118,7 +118,106 @@ const DeleteBucket = async (bucketKey) => {
 
   try {
     await Axios.request(config);
+    return {
+      bucketKey: bucketKey
+    }
   } catch (error) {
+    return {
+      error: error
+    }
+  }
+}
+
+const getSignedS3UploadUrl = async (bucketKey, objectKey) => {
+  const config = {
+    method: 'get',
+    url: `https://developer.api.autodesk.com/oss/v2/buckets/${bucketKey}/objects/${objectKey}/signeds3upload`,
+    headers: {
+      'Authorization': `Bearer ${access_token}`
+    }
+  }
+
+  try {
+    const res = await Axios.request(config);
+    return await res.data;
+  } catch (error) {
+    return {
+      error: error
+    }
+  }
+}
+
+const uploadFileToSignedUrl = async (signedUrl, file) => {
+  // In a browser environment, you can't directly access the file system using fs.
+  // However, you can handle file uploads using the FormData API
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const config = {
+    method: 'put',
+    maxBodyLength: Infinity,
+    url: signedUrl,
+    headers: {
+      'Content-Type': 'application/octet-stream'
+    },
+    data: formData
+  };
+
+  try {
+    const res = await Axios.request(config);
+    return res.data;
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+const finalizeFileUpload = async (bucketKey, objectKey, uploadKey) => {
+  const data = JSON.stringify({
+    uploadKey: uploadKey
+  });
+
+  const config = {
+    method: 'post',
+    url: `https://developer.api.autodesk.com/oss/v2/buckets/${bucketKey}/objects/${objectKey}/signeds3upload`,
+    headers: {
+      'Authorization': `Bearer ${access_token}`,
+      'Content-Type': 'application/json',
+      'x-ads-meta-Content-Type': 'application/octet-stream',
+    },
+    data: data
+  }
+
+  try {
+    const res = await Axios.request(config);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+const UploadFileToBucket = async (bucketKey, file) => {
+  const objectKey = file.name;
+
+  const { urls, uploadKey } = await getSignedS3UploadUrl(bucketKey, objectKey);
+  await uploadFileToSignedUrl(urls[0], file);
+  const objectData = await finalizeFileUpload(bucketKey, objectKey, uploadKey);
+
+  return objectData;
+}
+
+const DeleteObjectFromBucket = async (bucketKey, objectKey) => {
+  const config = {
+    method: 'delete',
+    url: `https://developer.api.autodesk.com/oss/v2/buckets/${bucketKey}/objects/${objectKey}`,
+    headers: {
+      'Authorization': `Bearer ${access_token}`
+    }
+  }
+
+  try {
+    const res = await Axios.request(config)
+    console.log(res.data);
+  } catch(error) {
     console.log(error);
   }
 }
@@ -127,13 +226,13 @@ const InitializeViewer = () => {
   const options = {
     env: 'AutodeskProduction2',
     api: 'streamingV2',  // for models uploaded to EMEA change this option to 'streamingV2_EU'
-    getAccessToken: function(onTokenReady) {
+    getAccessToken: function (onTokenReady) {
       const timeInSeconds = 3600; // Use value provided by APS Authentication (OAuth) API
       onTokenReady(access_token, timeInSeconds);
     }
   };
 
-  Autodesk.Viewing.Initializer(options, function() {
+  Autodesk.Viewing.Initializer(options, function () {
     const htmlDiv = document.getElementById('forgeViewer');
     let viewer = new Autodesk.Viewing.GuiViewer3D(htmlDiv);
     const startedCode = viewer.start();
@@ -151,5 +250,7 @@ export {
   GetObjectsInBucket,
   AddBucket,
   DeleteBucket,
+  UploadFileToBucket,
+  DeleteObjectFromBucket,
   InitializeViewer
 }

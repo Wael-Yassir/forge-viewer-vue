@@ -1,20 +1,12 @@
 <template>
   <div>
-    <div>
-      <v-snackbar
-        v-model="snackbar"
-      >
-        <div v-if="token" class="d-flex justify-space-between">
-          <span class="align-self-center">Authentication is done successfully! 😎</span>
-          <v-btn flat variant="text" color="success" @click="snackbar = false">Close</v-btn>
-        </div>
-
-        <div v-else class="d-flex justify-space-between">
-          <span class="align-self-center">Authentication failed! 😌😌</span>
-          <v-btn flat variant="text" color="red" @click="snackbar = false">Close</v-btn>
-        </div>
-      </v-snackbar>
-    </div>
+    <StatusModal
+      :show="snackbar"
+      :showSuccess="token"
+      successMsg="Authentication is done successfully! 😎"
+      failMsg="Authentication failed! 😌😌"
+    >
+    </StatusModal>
 
     <v-container>
       <v-row>
@@ -86,11 +78,12 @@
                 <v-btn
                   flat icon
                   color="red-darken-3"
+                  @click="DeleteModel(bucket.bucketKey, object.objectKey)"
                 >
                   <v-icon>mdi-delete</v-icon>
 
                   <v-tooltip activator="parent" location="top">
-                    Delete the model from the bucket
+                    Delete model from bucket
                   </v-tooltip>
                 </v-btn>
               </v-row>
@@ -125,17 +118,7 @@
           </v-tooltip>
         </v-btn>
 
-        <v-btn
-          icon flat
-          color="#2a73c5"
-          class="text-white mr-3"
-        >
-          <v-icon>mdi-plus</v-icon>
-
-          <v-tooltip activator="parent" location="top">
-            Add model to the bucket
-          </v-tooltip>
-        </v-btn>
+        <FileUploader :bucket="bucket" @ObjectAdded="OnObjectAdded"/>
       </v-col>
     </v-row>
 
@@ -144,12 +127,16 @@
 </template>
 
 <script>
-import * as forgeService from "@/services/forge.js";
+import StatusModal from "./StatusModal.vue";
 import AddBucketDialog from "./AddBucketDialog.vue";
+import FileUploader from "./FileUploader.vue";
+import * as forgeService from "@/services/forge.js";
 
 export default {
   components: {
-    AddBucketDialog
+    StatusModal,
+    AddBucketDialog,
+    FileUploader
   },
   data: () => ({
     snackbar: false,
@@ -167,6 +154,7 @@ export default {
 
       // get the objects inside each model
       for (const bucket of this.buckets) {
+        bucket.objects = [];
         bucket.objects = await forgeService.GetObjectsInBucket(bucket.bucketKey);
       }
     },
@@ -181,11 +169,26 @@ export default {
     async DeleteBucket(bucketKey) {
       await forgeService.DeleteBucket(bucketKey);
       this.buckets = this.buckets.filter(b => b.bucketKey != bucketKey);
+    },
+    OnObjectAdded(object) {
+      const bucket = this.buckets.find(b => b.bucketKey === object.bucketKey);
 
+      if (bucket) {
+        if (!bucket.objects) bucket.objects = [];
+        bucket.objects.push(object);
+      }
+    },
+    async DeleteModel(bucketKey, objectKey) {
+      await forgeService.DeleteObjectFromBucket(bucketKey, objectKey);
+      const bucket = this.buckets.find(b => b.bucketKey === bucketKey);
+
+      if (bucket) {
+        bucket.objects = bucket.objects.filter(o => o.objectKey != objectKey);
+      }
     },
     async InitializeViewer() {
       await forgeService.InitializeViewer(this.token);
-    }
+    },
   }
 }
 

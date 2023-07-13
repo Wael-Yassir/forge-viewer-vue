@@ -97,7 +97,7 @@ export default {
             this.res = await forgeService.AddBucket(this.bucket);
             this.loading = false
 
-            if (!this.res.message) {
+            if (this.res.bucketKey) {
               this.dialog = false;
               this.$emit('onBucketAdded', this.res.data);
             }
