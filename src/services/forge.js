@@ -5,6 +5,7 @@ const clientSecret = process.env.VUE_APP_FORGE_CLIENT_SECRET;
 const clientId = process.env.VUE_APP_FORGE_CLIENT_ID;
 
 let access_token = null;
+let viewer = null;
 
 /* ------------------------ METHODS ------------------------ */
 const Authenticate = async () => {
@@ -222,35 +223,115 @@ const DeleteObjectFromBucket = async (bucketKey, objectKey) => {
   }
 }
 
-const InitializeViewer = () => {
+const TranslateModel = async (modelUrn) => {
+  let data = JSON.stringify({
+    input: {
+      urn: modelUrn
+    },
+    output: {
+      formats: [
+        {
+          type: "svf",
+          views: [
+            "2d",
+            "3d"
+          ]
+        }
+      ]
+    }
+  })
+
+  const config = {
+    method: 'post',
+    maxBodyLength: Infinity,
+    url: 'https://developer.api.autodesk.com/modelderivative/v2/designdata/job',
+    headers: {
+      'Authorization':`Bearer ${access_token}`,
+      'Content-Type': 'application/json',
+      'x-ads-force': 'false'
+    },
+    data: data
+  }
+
+  try {
+    const res = await Axios.request(config);
+    return res;
+  } catch (error) {
+    return {
+      error: error
+    };
+  }
+}
+
+const CheckTranslationStatus = async (modelUrn) => {
+  const config = {
+    method: 'get',
+    url: `https://developer.api.autodesk.com/modelderivative/v2/designdata/${modelUrn}/manifest`,
+    headers: {
+      'Authorization': `Bearer ${access_token}`
+    }
+  }
+
+  try {
+    const res = await Axios.request(config);
+    return res.data;
+  } catch (error) {
+    return {
+      error: error
+    }
+  }
+}
+
+// The Initializer function needs to be run just once. It makes sure that all subsystems are running before proceeding.
+const InitializeViewer = async () => {
   const options = {
     env: 'AutodeskProduction2',
     api: 'streamingV2',  // for models uploaded to EMEA change this option to 'streamingV2_EU'
-    getAccessToken: function (onTokenReady) {
-      const timeInSeconds = 3600; // Use value provided by APS Authentication (OAuth) API
-      onTokenReady(access_token, timeInSeconds);
-    }
+    accessToken: access_token
   };
 
   Autodesk.Viewing.Initializer(options, function () {
     const htmlDiv = document.getElementById('forgeViewer');
-    let viewer = new Autodesk.Viewing.GuiViewer3D(htmlDiv);
+    viewer = new Autodesk.Viewing.GuiViewer3D(htmlDiv);
     const startedCode = viewer.start();
     if (startedCode > 0) {
-      console.error('Failed to create a Viewer: WebGL not supported.');
+      console.error('Failed to Initialize Forge Viewer!');
       return;
     }
-    console.log('Initialization complete, loading a model next...');
+    console.log('Autodesk Forge Initialization Completed Successfully!');
   });
+}
+
+// Before viewing the model need to be translated first
+const ViewModel = async (modelUrn) => {
+  const translationResponse = await TranslateModel(modelUrn);
+  if (translationResponse.status === 201) {
+    // add code to let the user know that the model is already translated.
+    // await CheckTranslationStatus(modelUrn);
+  }
+
+  // Before loading a model, the model should be translated and has a manifest file which need to be fetch first.
+  const documentId = `urn:${modelUrn}`;
+  Autodesk.Viewing.Document.load(documentId, onDocumentLoadSuccess, onDocumentLoadFailure);
+
+  function onDocumentLoadSuccess(viewerDocument) {
+    const defaultModel = viewerDocument.getRoot().getDefaultGeometry();
+    viewer.loadDocumentNode(viewerDocument, defaultModel);
+  }
+
+  function onDocumentLoadFailure() {
+    console.error('Failed fetch Forge manifest');
+  }
 }
 
 export {
   Authenticate,
+  InitializeViewer,
   GetBuckets,
   GetObjectsInBucket,
   AddBucket,
   DeleteBucket,
   UploadFileToBucket,
   DeleteObjectFromBucket,
-  InitializeViewer
+  ViewModel
 }

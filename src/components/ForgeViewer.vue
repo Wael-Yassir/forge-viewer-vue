@@ -67,6 +67,7 @@
                   icon flat
                   class="text-white mr-3"
                   color="grey-darken-2"
+                  @click="ViewModel(object.objectId)"
                 >
                   <v-icon>mdi-view-day-outline</v-icon>
 
@@ -122,11 +123,17 @@
       </v-col>
     </v-row>
 
-    <div id="forgeViewer"></div>
+    <div
+      id="forgeViewer"
+      class="px-1"
+      v-show="showViewer"
+    >
+    </div>
   </div>
 </template>
 
 <script>
+import { Buffer } from 'buffer'
 import StatusModal from "./StatusModal.vue";
 import AddBucketDialog from "./AddBucketDialog.vue";
 import FileUploader from "./FileUploader.vue";
@@ -143,11 +150,16 @@ export default {
     token: null,
     buckets: null,
     addBucketDialog: false,
+    showViewer: true
   }),
   methods: {
     async Authenticate() {
       this.token = await forgeService.Authenticate();
       this.snackbar = true;
+
+      // Initialize the viewer
+      await forgeService.InitializeViewer();
+      this.showViewer = false;
     },
     async ListBuckets() {
       this.buckets = await forgeService.GetBuckets();
@@ -186,8 +198,17 @@ export default {
         bucket.objects = bucket.objects.filter(o => o.objectKey != objectKey);
       }
     },
-    async InitializeViewer() {
-      await forgeService.InitializeViewer(this.token);
+    async ViewModel(objectId) {
+      this.showViewer = true;
+      const modelUrnBase64 = Buffer.from(objectId).toString('base64');
+      await forgeService.ViewModel(modelUrnBase64);
+
+      const viewerWrap = document.querySelector(".adsk-viewing-viewer");
+      if (!viewerWrap) return;
+
+      viewerWrap.style.width = "83%";
+      viewerWrap.style.height = "600px";
+      viewerWrap.style.position = "relative";
     },
   }
 }
@@ -196,18 +217,7 @@ export default {
 
 <style>
   #forgeViewer {
-    width: 80%;
-    height: 80%;
-    margin: 0;
-    background-color: #F0F8FF;
-  }
-  .adsk-viewing-viewer {
-    width: 50%;
-    height: 50%;
-  }
-  canvas {
-    width: 500px;
-    height: 500px;
+    margin-top: 30px;
   }
   .bucket.v-col {
     padding-top: 5px;
