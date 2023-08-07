@@ -7,6 +7,10 @@
         <span class="font-weight-light">Ninja </span>
         <span>Viewer</span>
       </v-app-bar-title>
+
+      <v-spacer></v-spacer>
+
+      <AuthenticateDialog @authenticated="onAuthenticated"/>
     </v-app-bar>
 
     <v-navigation-drawer v-model="drawer" permanent>
@@ -29,9 +33,15 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapState, mapActions } from 'vuex';
+import StatusModal from './StatusModal.vue';
+import AuthenticateDialog from './AuthenticateDialog.vue';
 
 export default {
+  components: {
+    StatusModal,
+    AuthenticateDialog
+  },
   data: () => ({
     drawer: false,
     menuItems: [
@@ -39,8 +49,22 @@ export default {
       { icon: 'mdi-view-day-outline', text: 'Forge Viewer', route: {name: 'forge-viewer'} }
     ],
   }),
+  methods: {
+    async onAuthenticated(res) {
+      this.$store.dispatch('updateStatusModal', {
+        show: true,
+        showSuccessMsg: !res.error ? true : false,
+        msg: {
+          succeeded: "Authentication is done successfully! 😎",
+          failure: "Authentication failed! 😌😌"
+        }
+      });
+
+      if (!res.err) this.$store.dispatch('storeAccessToken', res);
+    },
+  },
   computed: {
-    ...mapState([ 'primaryColor' ])
+    ...mapState([ 'primaryColor'])
   }
 }
 </script>

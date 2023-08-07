@@ -10,7 +10,6 @@
           prepend-icon="mdi-plus"
           color="#2a73c5" flat
           class="text-white"
-          @click="addBucketDialog = true"
         >
           Add Bucket
         </v-btn>
@@ -37,9 +36,7 @@
                 prepend-inner-icon="mdi-form-textbox"
                 v-model="bucket.bucketKey"
                 class="mb-4"
-                :rules="[
-                  v => v.length > 2 && v.length < 129 || 'Bucket name should be between 3-128 characters in length!'
-                ]"
+                :rules="rules.range"
               >
               </v-text-field>
 
@@ -49,7 +46,7 @@
                 prepend-inner-icon="mdi-cog"
                 v-model="bucket.policyKey"
                 class="mb-5"
-                :rules="[ bucket.policyKey.length > 0 || 'Policy Key is a required field' ]"
+                :rules="rules.required"
                 :items="['transient', 'temporary', 'persistent']"
               >
               </v-select>
@@ -86,6 +83,10 @@ export default {
       bucketKey: '',
       policyKey: ''
     },
+    rules: {
+      required: value => !!value || 'Required Field',
+      range: v => v.length > 2 && v.length < 129 || 'Bucket name should be between 3-128 characters in length!',
+    }
   }),
   methods: {
     submit() {
@@ -109,8 +110,5 @@ export default {
 
 </script>
 
-<style scoped>
-  .error {
-    color: #b00020;
-  }
+<style>
 </style>

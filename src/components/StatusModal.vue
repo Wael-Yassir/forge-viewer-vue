@@ -7,7 +7,7 @@
       @update:modelValue="newValue => show=newValue"
     >
       <div
-        v-if="showSuccess"
+        v-if="showSuccessMsg"
         class="d-flex justify-space-between"
       >
         <span class="align-self-center">{{ successMsg }}</span>
@@ -21,7 +21,7 @@
       </div>
 
       <div v-else class="d-flex justify-space-between">
-        <span class="align-self-center">{{ failMsg }}</span>
+        <span class="align-self-center">{{ failureMsg }}</span>
         <v-btn
           variant="text"
           flat color="red"
@@ -36,7 +36,7 @@
 
 <script>
   export default {
-    props: [ 'show', 'showSuccess', 'successMsg', 'failMsg'],
+    props: [ 'show', 'showSuccessMsg', 'successMsg', 'failureMsg'],
   }
 </script>
 

@@ -8,7 +8,7 @@ let access_token = null;
 let viewer = null;
 
 /* ------------------------ METHODS ------------------------ */
-const Authenticate = async () => {
+const Authenticate = async (clientId, clientSecret) => {
   const authorization = btoa(`${clientId}:${clientSecret}`);
 
   let data = qs.stringify({
@@ -30,12 +30,15 @@ const Authenticate = async () => {
 
   try {
     const res = await Axios.request(config);
-    access_token = await res.data.access_token;
-  } catch (error) {
-    console.log(error.message)
-  }
+    access_token = await res.data.access_token
+    return access_token;
 
-  return access_token
+  } catch (error) {
+    console.log(error.message);
+    return {
+      error: error.message
+    }
+  }
 }
 
 const GetBuckets = async () => {
@@ -103,7 +106,7 @@ const AddBucket = async (bucket) => {
     return addedBucket;
   } catch (error) {
     return {
-      message: error.response.data.reason
+      error: error.response.data.reason
     };
   }
 }

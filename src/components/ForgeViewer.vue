@@ -1,24 +1,7 @@
 <template>
   <div>
-    <StatusModal
-      :show="snackbar"
-      :showSuccess="token"
-      successMsg="Authentication is done successfully! 😎"
-      failMsg="Authentication failed! 😌😌"
-    >
-    </StatusModal>
-
     <v-container>
       <v-row>
-        <v-btn
-          prepend-icon="mdi-login-variant"
-          class="text-white mr-3"
-          color="grey-darken-2" flat
-          @click="Authenticate"
-        >
-          Authenticate
-        </v-btn>
-
         <v-btn
           prepend-icon="mdi-format-list-bulleted"
           class="text-white mr-3"
@@ -133,6 +116,8 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
+
 import { Buffer } from 'buffer'
 import StatusModal from "./StatusModal.vue";
 import AddBucketDialog from "./AddBucketDialog.vue";
@@ -146,22 +131,13 @@ export default {
     FileUploader
   },
   data: () => ({
-    snackbar: false,
-    token: null,
     buckets: null,
     addBucketDialog: false,
     showViewer: true
   }),
   methods: {
-    async Authenticate() {
-      this.token = await forgeService.Authenticate();
-      this.snackbar = true;
-
-      // Initialize the viewer
-      await forgeService.InitializeViewer();
-      this.showViewer = false;
-    },
     async ListBuckets() {
+      await forgeService.InitializeViewer();
       this.buckets = await forgeService.GetBuckets();
 
       // get the objects inside each model
@@ -169,6 +145,8 @@ export default {
         bucket.objects = [];
         bucket.objects = await forgeService.GetObjectsInBucket(bucket.bucketKey);
       }
+
+      this.showViewer = false;
     },
     UpdateBucket(bucket) {
       this.buckets.push({
@@ -210,6 +188,9 @@ export default {
       viewerWrap.style.height = "600px";
       viewerWrap.style.position = "relative";
     },
+  },
+  computed: {
+    ...mapState([ 'token' ])
   }
 }
 
