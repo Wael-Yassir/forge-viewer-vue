@@ -3,7 +3,8 @@ import { createStore } from 'vuex'
 export default createStore({
   strict: true,   // prevent any changes on the state outside mutaions.
   state: {
-    primaryColor: '#2a73c5',
+    blueColor: '#2a73c5',
+    redColor:'#C62828',
     statusModal: {
       show: false,
       showSuccessMsg: false,
@@ -42,7 +43,7 @@ export default createStore({
             failure: ""
           }
         })
-      }, 5000);
+      }, 6000);
     },
     storeAccessToken(context, payload) {
       context.commit('storeAccessToken', payload);

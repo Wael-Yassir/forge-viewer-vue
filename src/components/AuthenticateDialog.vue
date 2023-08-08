@@ -3,12 +3,12 @@
     <v-dialog
       v-model="dialog"
       max-width="425"
-      activator="parent"
     >
       <template v-slot:activator="{ props }">
         <v-btn
           color="grey-darken-1"
           prepend-icon="mdi-logout-variant"
+          v-bind="props"
         >
           <span class="font-weight-bold">Authenticate</span>
         </v-btn>

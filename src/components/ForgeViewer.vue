@@ -26,6 +26,8 @@
 
     <v-container class="pt-6"></v-container>
 
+    <ConfirmDialog ref="confirmDelete" />
+
     <v-row v-for="(bucket, i) in buckets" :key="i" class="m">
       <v-col cols="10" class="bucket">
         <v-expansion-panels class="pa-1">
@@ -61,7 +63,9 @@
 
                 <v-btn
                   flat icon
-                  color="red-darken-3"
+                  :color="redColor"
+                  text-color="white"
+                  class="text-white"
                   @click="DeleteModel(bucket.bucketKey, object.objectKey)"
                 >
                   <v-icon>mdi-delete</v-icon>
@@ -79,7 +83,7 @@
       <v-col class="d-flex flex-row-reverse d">
         <v-btn
           icon flat
-          color="red-darken-3"
+          :color="redColor"
           class="text-white mr-6"
           @click="DeleteBucket(bucket.bucketKey)"
         >
@@ -120,6 +124,7 @@ import { mapState } from 'vuex';
 
 import { Buffer } from 'buffer'
 import StatusModal from "./StatusModal.vue";
+import ConfirmDialog from './ConfirmDialog.vue';
 import AddBucketDialog from "./AddBucketDialog.vue";
 import FileUploader from "./FileUploader.vue";
 import * as forgeService from "@/services/forge.js";
@@ -127,6 +132,7 @@ import * as forgeService from "@/services/forge.js";
 export default {
   components: {
     StatusModal,
+    ConfirmDialog,
     AddBucketDialog,
     FileUploader
   },
@@ -157,8 +163,26 @@ export default {
       });
     },
     async DeleteBucket(bucketKey) {
-      await forgeService.DeleteBucket(bucketKey);
-      this.buckets = this.buckets.filter(b => b.bucketKey != bucketKey);
+      const deleteConfirmed = await this.$refs.confirmDelete.show(
+        `Are you sure you want to delete ${bucketKey.toUpperCase()} bucket?`
+      );
+
+      if (deleteConfirmed) {
+        const res = await forgeService.DeleteBucket(bucketKey);
+        if (res.bucketKey) {
+          this.buckets = this.buckets.filter(b => b.bucketKey != bucketKey);
+
+          this.$store.dispatch('updateStatusModal', {
+            show: true,
+            showSuccessMsg: res.bucketKey ? true : false,
+            msg: {
+              succeeded: "Bucket deleted successfully! 😎",
+              failure: `Error deleting ${res.bucketKey} bucket! 😌😌`
+            }
+          });
+        }
+      }
+
     },
     OnObjectAdded(object) {
       const bucket = this.buckets.find(b => b.bucketKey === object.bucketKey);
@@ -169,11 +193,17 @@ export default {
       }
     },
     async DeleteModel(bucketKey, objectKey) {
-      await forgeService.DeleteObjectFromBucket(bucketKey, objectKey);
-      const bucket = this.buckets.find(b => b.bucketKey === bucketKey);
+      const deleteConfirmed = await this.$refs.confirmDelete.show(
+        `Are you sure you want to delete ${objectKey.toUpperCase()} from ${bucketKey.toUpperCase()} bucket?`
+      );
 
-      if (bucket) {
-        bucket.objects = bucket.objects.filter(o => o.objectKey != objectKey);
+      if (deleteConfirmed) {
+        await forgeService.DeleteObjectFromBucket(bucketKey, objectKey);
+        const bucket = this.buckets.find(b => b.bucketKey === bucketKey);
+
+        if (bucket) {
+          bucket.objects = bucket.objects.filter(o => o.objectKey != objectKey);
+        }
       }
     },
     async ViewModel(objectId) {
@@ -190,7 +220,7 @@ export default {
     },
   },
   computed: {
-    ...mapState([ 'token' ])
+    ...mapState([ 'token', 'redColor' ])
   }
 }
 

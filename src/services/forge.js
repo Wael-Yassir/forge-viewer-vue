@@ -32,7 +32,6 @@ const Authenticate = async (clientId, clientSecret) => {
     const res = await Axios.request(config);
     access_token = await res.data.access_token
     return access_token;
-
   } catch (error) {
     console.log(error.message);
     return {
@@ -88,7 +87,6 @@ const GetObjectsInBucket = async (bucketKey, numberOfModels) => {
 }
 
 const AddBucket = async (bucket) => {
-  let addedBucket = null;
   const data = JSON.stringify(bucket);
 
   const config = {
@@ -102,8 +100,8 @@ const AddBucket = async (bucket) => {
   }
 
   try {
-    addedBucket = await Axios.request(config);
-    return addedBucket;
+    const res = await Axios.request(config);
+    return res.data;
   } catch (error) {
     return {
       error: error.response.data.reason

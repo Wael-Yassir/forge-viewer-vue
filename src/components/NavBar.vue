@@ -20,7 +20,7 @@
           :key="i"
           :value="item"
           router :to="item.route"
-          :color="primaryColor"
+          :color="blueColor"
         >
           <template v-slot:prepend>
             <v-icon :icon="item.icon"></v-icon>
@@ -33,14 +33,16 @@
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex';
+import { mapState } from 'vuex';
 import StatusModal from './StatusModal.vue';
 import AuthenticateDialog from './AuthenticateDialog.vue';
+import ConfirmDialog from './ConfirmDialog.vue';
 
 export default {
   components: {
     StatusModal,
-    AuthenticateDialog
+    AuthenticateDialog,
+    ConfirmDialog
   },
   data: () => ({
     drawer: false,
@@ -61,10 +63,10 @@ export default {
       });
 
       if (!res.err) this.$store.dispatch('storeAccessToken', res);
-    },
+    }
   },
   computed: {
-    ...mapState([ 'primaryColor'])
+    ...mapState([ 'blueColor'])
   }
 }
 </script>
