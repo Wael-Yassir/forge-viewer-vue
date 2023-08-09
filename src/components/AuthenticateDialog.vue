@@ -56,7 +56,7 @@
                   class="mb-2 text-white"
                   prepend-icon="mdi-login-variant"
                   :loading="loading"
-                  color="#2a73c5" flat
+                  :color="blueColor" flat
                   @click="Authenticate"
                 >
                   Authenticate
@@ -102,7 +102,7 @@ export default {
     }
   },
   computed: {
-    ...mapState([ 'defaultRules' ])
+    ...mapState([ 'defaultRules', 'blueColor' ])
   }
 }
 </script>

@@ -10,6 +10,7 @@
           color="#2a73c5" flat
           class="text-white"
           v-bind="props"
+          density="comfortable"
         >
           Add Bucket
         </v-btn>

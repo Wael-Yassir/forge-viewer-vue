@@ -1,118 +1,103 @@
 <template>
   <div>
-    <v-container>
-      <v-row>
-        <v-btn
-          prepend-icon="mdi-format-list-bulleted"
-          class="text-white mr-3"
-          color="grey-darken-2" flat
-          :disabled="!token"
-          @click="ListBuckets"
-        >
-          List Buckets
-        </v-btn>
-      </v-row>
-    </v-container>
-
-    <v-container v-if="this.buckets" class="mb-4">
-      <v-row round class="bg-grey-lighten-3 mt-2 py-4 px-6 text-grey">
-        <span class="text-uppercase text-h6">Buckets</span>
-
-        <v-spacer></v-spacer>
-
-        <AddBucketDialog @onBucketAdded="UpdateBucket"/>
-      </v-row>
-    </v-container>
-
-    <v-container class="pt-6"></v-container>
-
     <ConfirmDialog ref="confirmDelete" />
 
-    <v-row v-for="(bucket, i) in buckets" :key="i" class="m">
-      <v-col cols="10" class="bucket">
-        <v-expansion-panels class="pa-1">
-          <v-expansion-panel>
-            <v-expansion-panel-title class="px-6 py-4">
-              <div class="text-subtitle-1 text-uppercase">{{ bucket.bucketKey }}</div>
-            </v-expansion-panel-title>
+    <v-navigation-drawer permanent width="500">
+      <v-list>
+        <v-list-subheader class="full-width mb-16">
+          <div class="bucket-action">
+            <v-btn
+              prepend-icon="mdi-format-list-bulleted"
+              class="text-white mr-3"
+              color="grey-darken-2" flat
+              :disabled="!token"
+              @click="ListBuckets"
+              density="comfortable"
+            >
+              List Buckets
+            </v-btn>
 
-            <v-expansion-panel-text class="text-grey">
-              <v-row
-                v-for="(object, i) in bucket.objects"
-                :key="i"
-                class="my-1 py-2 px-2"
-              >
-                <div class="d-flex flex-column align-self-center">
-                  <span class="text-h5">{{ object.objectKey }}</span>
-                </div>
+            <AddBucketDialog v-if="this.buckets" @onBucketAdded="UpdateBucket"/>
+          </div>
+        </v-list-subheader>
 
-                <v-spacer></v-spacer>
+        <v-divider class="mb-4"/>
 
+        <v-list-group
+          v-for="(bucket, i) in buckets" :key="i"
+          :value="bucket.bucketKey" 
+        >
+          <template v-slot:activator="{ props }">
+            <v-list-item v-bind="props" class="px-8">
+              <v-list-item-title class="text-uppercase">
+                {{ bucket.bucketKey }}
+              </v-list-item-title>
+
+              <template v-slot:append>
                 <v-btn
                   icon flat
-                  class="text-white mr-3"
-                  color="grey-darken-2"
-                  @click="ViewModel(object.objectId)"
-                >
-                  <v-icon>mdi-view-day-outline</v-icon>
-
-                  <v-tooltip activator="parent" location="top">
-                    View the model
-                  </v-tooltip>
-                </v-btn>
-
-                <v-btn
-                  flat icon
                   :color="redColor"
-                  text-color="white"
-                  class="text-white"
-                  @click="DeleteModel(bucket.bucketKey, object.objectKey)"
+                  class="text-white mr-2"
+                  @click="DeleteBucket(bucket.bucketKey)"
+                  density="comfortable"
                 >
                   <v-icon>mdi-delete</v-icon>
 
                   <v-tooltip activator="parent" location="top">
-                    Delete model from bucket
+                    Delete bucket
                   </v-tooltip>
                 </v-btn>
-              </v-row>
-            </v-expansion-panel-text>
-          </v-expansion-panel>
-        </v-expansion-panels>
-      </v-col>
 
-      <v-col class="d-flex flex-row-reverse d">
-        <v-btn
-          icon flat
-          :color="redColor"
-          class="text-white mr-6"
-          @click="DeleteBucket(bucket.bucketKey)"
-        >
-          <v-icon>mdi-delete</v-icon>
+                <FileUploader :bucket="bucket" @ObjectAdded="OnObjectAdded"/>
+              </template>
+            </v-list-item>
+          </template>
 
-          <v-tooltip activator="parent" location="top">
-            Delete bucket
-          </v-tooltip>
-        </v-btn>
+          <v-list-item v-for="(object, i) in bucket.objects" :key="i">
+            <v-list-item-title>
+              <span style="font-size: 16px;">
+                {{ object.objectKey }}
+              </span>
+            </v-list-item-title>
 
-        <v-btn
-          icon flat
-          color="grey-darken-2"
-          class="text-white mr-3"
-        >
-          <v-icon>mdi-pencil</v-icon>
+            <template v-slot:append>
+              <v-btn
+                flat icon
+                :color="redColor"
+                text-color="white"
+                class="text-white mr-2"
+                @click="DeleteModel(bucket.bucketKey, object.objectKey)"
+                density="comfortable"
+              >
+                <v-icon>mdi-delete</v-icon>
 
-          <v-tooltip activator="parent" location="top">
-            Rename bucket
-          </v-tooltip>
-        </v-btn>
+                <v-tooltip activator="parent" location="top">
+                  Delete model from bucket
+                </v-tooltip>
+              </v-btn>
 
-        <FileUploader :bucket="bucket" @ObjectAdded="OnObjectAdded"/>
-      </v-col>
-    </v-row>
+              <v-btn
+                icon flat
+                class="text-white mr-6"
+                color="grey-darken-2"
+                @click="ViewModel(object.objectId)"
+                density="comfortable"
+              >
+                <v-icon>mdi-view-day-outline</v-icon>
+
+                <v-tooltip activator="parent" location="top">
+                  View the model
+                </v-tooltip>
+              </v-btn>
+            </template>
+          </v-list-item>
+          <v-divider class="mt-2 mx-8"/>
+        </v-list-group>
+      </v-list>
+    </v-navigation-drawer>
 
     <div
       id="forgeViewer"
-      class="px-1"
       v-show="showViewer"
     >
     </div>
@@ -214,8 +199,7 @@ export default {
       const viewerWrap = document.querySelector(".adsk-viewing-viewer");
       if (!viewerWrap) return;
 
-      viewerWrap.style.width = "83%";
-      viewerWrap.style.height = "600px";
+      viewerWrap.style.maxHeight = '825px';
       viewerWrap.style.position = "relative";
     },
   },
@@ -228,7 +212,7 @@ export default {
 
 <style>
   #forgeViewer {
-    margin-top: 30px;
+    margin-top: 25px;
   }
   .bucket.v-col {
     padding-top: 5px;
@@ -237,5 +221,14 @@ export default {
   .d.v-col {
     padding-left: 0px;
     padding-right: 0px;
+  }
+  .full-width .v-list-subheader__text {
+    width: 100%;
+  }
+  .bucket-action {
+    margin: 15px 10px; 
+    margin-bottom: 60px;
+    display: flex; 
+    justify-content: space-between; 
   }
 </style>

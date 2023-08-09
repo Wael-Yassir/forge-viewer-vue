@@ -1,34 +1,31 @@
 <template>
   <div>
     <v-app-bar color="#e9e9e9" flat>
-      <v-app-bar-nav-icon class="text-grey" variant="text" @click.stop="drawer=!drawer"></v-app-bar-nav-icon>
+      <template v-slot:prepend>
+        <v-app-bar-title class="ml-2 text-uppercase text-grey">
+          <div>
+            <span class="font-weight-light">Ninja </span>
+            <span>Viewer</span>
+          </div>
+        </v-app-bar-title>
 
-      <v-app-bar-title class="text-uppercase text-grey">
-        <span class="font-weight-light">Ninja </span>
-        <span>Viewer</span>
-      </v-app-bar-title>
+        <div class="ml-6">
+          <v-btn
+            v-for="(item, i) in menuItems"
+            :key="i"
+            router :to="item.route"
+            :prepend-icon="item.icon"
+            color="grey-darken-1"
+          >
+            <span class="font-weight-bold">{{ item.text  }}</span>
+          </v-btn>
+        </div>
+      </template>
 
-      <v-spacer></v-spacer>
-
-      <AuthenticateDialog @authenticated="onAuthenticated"/>
+      <template v-slot:append>
+        <AuthenticateDialog @authenticated="onAuthenticated"/>
+      </template>
     </v-app-bar>
-
-    <v-navigation-drawer v-model="drawer" permanent>
-      <v-list>
-        <v-list-item
-          v-for="(item, i) in menuItems"
-          :key="i"
-          :value="item"
-          router :to="item.route"
-          :color="blueColor"
-        >
-          <template v-slot:prepend>
-            <v-icon :icon="item.icon"></v-icon>
-          </template>
-          <v-list-item-title v-text="item.text" class="grey"></v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-navigation-drawer>
   </div>
 </template>
 
@@ -45,7 +42,6 @@ export default {
     ConfirmDialog
   },
   data: () => ({
-    drawer: false,
     menuItems: [
       { icon: 'mdi-home', text: 'Home', route: {name: 'home'} },
       { icon: 'mdi-view-day-outline', text: 'Forge Viewer', route: {name: 'forge-viewer'} }

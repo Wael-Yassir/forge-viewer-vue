@@ -4,9 +4,10 @@
     <v-btn
       icon flat
       color="#2a73c5"
-      class="text-white mr-3"
+      class="text-white"
       :loading="loading"
       @click="handleFileUpload"
+      density="comfortable"
     >
       <v-icon>mdi-plus</v-icon>
 
