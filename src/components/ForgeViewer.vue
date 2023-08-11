@@ -96,20 +96,7 @@
       </v-list>
     </v-navigation-drawer>
 
-    <div v-if="translationLoader" class="translation-loader">
-      <v-card :color="blueColor">
-        <v-card-text class="text-white text-uppercase">
-          Model Translation Progress: {{ translationProgress }}
-        </v-card-text>
-
-        <v-progress-linear
-          indeterminate
-          color="white"
-          class="mb-0"
-        >
-        </v-progress-linear>
-      </v-card>
-    </div>
+    <Loader ref="loader" :show="loader"/>
 
     <div
       id="forgeViewer"
@@ -127,6 +114,8 @@ import StatusModal from "./StatusModal.vue";
 import ConfirmDialog from './ConfirmDialog.vue';
 import AddBucketDialog from "./AddBucketDialog.vue";
 import FileUploader from "./FileUploader.vue";
+import Loader from './Loader.vue';
+
 import * as forgeService from "@/services/forge.js";
 
 export default {
@@ -134,15 +123,16 @@ export default {
     StatusModal,
     ConfirmDialog,
     AddBucketDialog,
-    FileUploader
+    FileUploader,
+    Loader
   },
   data: () => ({
-    translationLoader: false,
+    loader: false,
     buckets: null,
     addBucketDialog: false,
     showViewer: true,
     translationStatus: '',
-    translationProgress: ''
+    translationProgress: '',
   }),
   methods: {
     async ListBuckets() {
@@ -220,23 +210,24 @@ export default {
         const interval = setInterval(async () => {
           const res = await forgeService.CheckTranslationStatus(modelUrnBase64);
 
-          this.translationLoader = true
+          this.loader = true
           this.translationStatus = res.status;
           this.translationProgress = res.progress;
+          this.$refs.loader.message = `Model Translation Progress: ${this.translationProgress}`
           
           if (this.translationStatus === 'success') {
             clearInterval(interval);
             setTimeout(() => {
-              this.translationLoader = false;
+              this.loader = false;
               this._viewModel(modelUrnBase64);
             }, 2000);
           } 
           else if (this.translationStatus === 'failed' || this.translationStatus === 'timeout') {
             console.log("Translation Model Status", this.translationStatus);
-            this.translationLoader = false;
+            this.loader = false;
             clearInterval(interval);
           }
-        }, 5000);
+        }, 2500);
       }
     },
     async _viewModel(modelUrn) {
