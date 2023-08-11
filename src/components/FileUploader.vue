@@ -11,8 +11,8 @@
     >
       <v-icon>mdi-plus</v-icon>
 
-      <v-tooltip activator="parent" location="top">
-        Upload file to a bucket
+      <v-tooltip activator="parent" location="right">
+        Upload model to a bucket
       </v-tooltip>
     </v-btn>
 
@@ -48,10 +48,21 @@
       },
       async onFileChanged(e) {
         this.selectedFile = e.target.files[0];
-        const objectData = await forgeService
-          .UploadFileToBucket(this.bucket.bucketKey, this.selectedFile);
+        const reader = new FileReader();
+        
+        reader.onload = async (event) => {
+          const byteArray = new Uint8Array(event.target.result);
 
-        if (objectData.objectId) this.$emit('objectAdded', objectData);
+          const objectData = await forgeService.UploadFileToBucket(
+            this.bucket.bucketKey, 
+            this.selectedFile.name,
+            byteArray
+          );
+          
+          if (objectData.objectId) this.$emit('objectAdded', objectData);
+        }
+
+        reader.readAsArrayBuffer(this.selectedFile);
       }
     }
   }

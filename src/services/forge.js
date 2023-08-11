@@ -149,20 +149,14 @@ const getSignedS3UploadUrl = async (bucketKey, objectKey) => {
   }
 }
 
-const uploadFileToSignedUrl = async (signedUrl, file) => {
-  // In a browser environment, you can't directly access the file system using fs.
-  // However, you can handle file uploads using the FormData API
-  const formData = new FormData();
-  formData.append('file', file);
-
+const uploadFileToSignedUrl = async (signedUrl, fileArray) => {
   const config = {
     method: 'put',
-    maxBodyLength: Infinity,
     url: signedUrl,
     headers: {
-      'Content-Type': 'application/octet-stream'
+      'Content-Type': 'application/octet-stream',
     },
-    data: formData
+    data: fileArray
   };
 
   try {
@@ -197,11 +191,10 @@ const finalizeFileUpload = async (bucketKey, objectKey, uploadKey) => {
   }
 }
 
-const UploadFileToBucket = async (bucketKey, file) => {
-  const objectKey = file.name;
-
+const UploadFileToBucket = async (bucketKey, objectKey, fileArray) => {
   const { urls, uploadKey } = await getSignedS3UploadUrl(bucketKey, objectKey);
-  await uploadFileToSignedUrl(urls[0], file);
+  
+  await uploadFileToSignedUrl(urls[0], fileArray);
   const objectData = await finalizeFileUpload(bucketKey, objectKey, uploadKey);
 
   return objectData;
@@ -256,7 +249,7 @@ const TranslateModel = async (modelUrn) => {
 
   try {
     const res = await Axios.request(config);
-    return res;
+    return res.data;
   } catch (error) {
     return {
       error: error
@@ -267,6 +260,7 @@ const TranslateModel = async (modelUrn) => {
 const CheckTranslationStatus = async (modelUrn) => {
   const config = {
     method: 'get',
+    maxBodyLength: Infinity,
     url: `https://developer.api.autodesk.com/modelderivative/v2/designdata/${modelUrn}/manifest`,
     headers: {
       'Authorization': `Bearer ${access_token}`
@@ -303,15 +297,7 @@ const InitializeViewer = async () => {
   });
 }
 
-// Before viewing the model need to be translated first
 const ViewModel = async (modelUrn) => {
-  const translationResponse = await TranslateModel(modelUrn);
-  if (translationResponse.status === 201) {
-    // add code to let the user know that the model is already translated.
-    // await CheckTranslationStatus(modelUrn);
-  }
-
-  // Before loading a model, the model should be translated and has a manifest file which need to be fetch first.
   const documentId = `urn:${modelUrn}`;
   Autodesk.Viewing.Document.load(documentId, onDocumentLoadSuccess, onDocumentLoadFailure);
 
@@ -333,6 +319,8 @@ export {
   AddBucket,
   DeleteBucket,
   UploadFileToBucket,
+  TranslateModel,
+  CheckTranslationStatus,
   DeleteObjectFromBucket,
   ViewModel
 }

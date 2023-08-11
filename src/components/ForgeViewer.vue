@@ -43,7 +43,7 @@
                 >
                   <v-icon>mdi-delete</v-icon>
 
-                  <v-tooltip activator="parent" location="top">
+                  <v-tooltip activator="parent" location="left">
                     Delete bucket
                   </v-tooltip>
                 </v-btn>
@@ -71,8 +71,8 @@
               >
                 <v-icon>mdi-delete</v-icon>
 
-                <v-tooltip activator="parent" location="top">
-                  Delete model from bucket
+                <v-tooltip activator="parent" location="left">
+                  Delete model
                 </v-tooltip>
               </v-btn>
 
@@ -80,13 +80,13 @@
                 icon flat
                 class="text-white mr-6"
                 color="grey-darken-2"
-                @click="ViewModel(object.objectId)"
+                @click="PrepareModelForViewer(object.objectId)"
                 density="comfortable"
               >
                 <v-icon>mdi-view-day-outline</v-icon>
 
-                <v-tooltip activator="parent" location="top">
-                  View the model
+                <v-tooltip activator="parent" location="right">
+                  View model
                 </v-tooltip>
               </v-btn>
             </template>
@@ -95,6 +95,21 @@
         </v-list-group>
       </v-list>
     </v-navigation-drawer>
+
+    <div v-if="translationLoader" class="translation-loader">
+      <v-card :color="blueColor">
+        <v-card-text class="text-white text-uppercase">
+          Model Translation Progress: {{ translationProgress }}
+        </v-card-text>
+
+        <v-progress-linear
+          indeterminate
+          color="white"
+          class="mb-0"
+        >
+        </v-progress-linear>
+      </v-card>
+    </div>
 
     <div
       id="forgeViewer"
@@ -122,9 +137,12 @@ export default {
     FileUploader
   },
   data: () => ({
+    translationLoader: false,
     buckets: null,
     addBucketDialog: false,
-    showViewer: true
+    showViewer: true,
+    translationStatus: '',
+    translationProgress: ''
   }),
   methods: {
     async ListBuckets() {
@@ -191,20 +209,49 @@ export default {
         }
       }
     },
-    async ViewModel(objectId) {
-      this.showViewer = true;
+    async PrepareModelForViewer(objectId) {
       const modelUrnBase64 = Buffer.from(objectId).toString('base64');
-      await forgeService.ViewModel(modelUrnBase64);
+
+      const jobResult = await forgeService.TranslateModel(modelUrnBase64);
+
+      if (jobResult.result === 'created') {
+        this._viewModel(modelUrnBase64);
+      } else if (jobResult.result === 'success') {
+        const interval = setInterval(async () => {
+          const res = await forgeService.CheckTranslationStatus(modelUrnBase64);
+
+          this.translationLoader = true
+          this.translationStatus = res.status;
+          this.translationProgress = res.progress;
+          
+          if (this.translationStatus === 'success') {
+            clearInterval(interval);
+            setTimeout(() => {
+              this.translationLoader = false;
+              this._viewModel(modelUrnBase64);
+            }, 2000);
+          } 
+          else if (this.translationStatus === 'failed' || this.translationStatus === 'timeout') {
+            console.log("Translation Model Status", this.translationStatus);
+            this.translationLoader = false;
+            clearInterval(interval);
+          }
+        }, 5000);
+      }
+    },
+    async _viewModel(modelUrn) {
+      this.showViewer = true;
+      await forgeService.ViewModel(modelUrn);
 
       const viewerWrap = document.querySelector(".adsk-viewing-viewer");
       if (!viewerWrap) return;
 
       viewerWrap.style.maxHeight = '825px';
       viewerWrap.style.position = "relative";
-    },
+    } 
   },
   computed: {
-    ...mapState([ 'token', 'redColor' ])
+    ...mapState([ 'token', 'blueColor', 'redColor' ])
   }
 }
 
@@ -230,5 +277,14 @@ export default {
     margin-bottom: 60px;
     display: flex; 
     justify-content: space-between; 
+  }
+  .translation-loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(80px, 0);
   }
 </style>
