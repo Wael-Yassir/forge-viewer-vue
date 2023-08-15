@@ -286,8 +286,13 @@ const InitializeViewer = async () => {
   };
 
   Autodesk.Viewing.Initializer(options, function () {
+    // Adding extensions
+    const config3d = {
+      extensions: [ 'AwesomeExtension' ]
+    }
+
     const htmlDiv = document.getElementById('forgeViewer');
-    viewer = new Autodesk.Viewing.GuiViewer3D(htmlDiv);
+    viewer = new Autodesk.Viewing.GuiViewer3D(htmlDiv, config3d);
     const startedCode = viewer.start();
     if (startedCode > 0) {
       console.error('Failed to Initialize Forge Viewer!');

@@ -98,10 +98,30 @@
 
     <Loader ref="loader" :show="loader"/>
 
-    <div
-      id="forgeViewer"
-      v-show="showViewer"
-    >
+    <div v-show="showViewer">
+      <div id="forgeViewer"></div>
+
+      <div class="mt-3 d-flex justify-center">
+        <v-btn 
+          id="lockCameraBtn"
+          class="mr-2 text-white"
+          :color="blueColor"
+          width="150"
+          v-show="buckets"
+        >
+          Lock Camera
+        </v-btn>
+        
+        <v-btn 
+          id="UnlockCameraBtn"
+          class="ml-2 text-white"
+          :color="redColor"
+          width="150"
+          v-show="buckets"
+        >
+          Unlock Camera
+        </v-btn>
+      </div>
     </div>
   </div>
 </template>
@@ -237,7 +257,7 @@ export default {
       const viewerWrap = document.querySelector(".adsk-viewing-viewer");
       if (!viewerWrap) return;
 
-      viewerWrap.style.maxHeight = '825px';
+      viewerWrap.style.maxHeight = '800px';
       viewerWrap.style.position = "relative";
     } 
   },

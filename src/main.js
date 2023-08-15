@@ -12,3 +12,7 @@ createApp(App)
   .use(store)
   .use(vuetify)
   .mount('#app')
+
+
+// import forge extensions
+import _Extensions from './extensions/_Extensions';
