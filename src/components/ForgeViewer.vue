@@ -96,6 +96,17 @@
       </v-list>
     </v-navigation-drawer>
 
+    <v-container>
+      <div class="d-flex justify-space-between">
+        <span class="font-weight-bold text-uppercase text-grey-darken-2">
+          Items Selected: <span id="items-selected" class="text-red-darken-2">0</span>
+        </span>
+        <span class="font-weight-bold text-uppercase text-grey-darken-2">
+          Navigation Tool: <span id="navigation-tool" class="text-red-darken-2">orbit</span>
+        </span>
+      </div>
+    </v-container>
+
     <Loader ref="loader" :show="loader"/>
 
     <div v-show="showViewer">
