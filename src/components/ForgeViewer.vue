@@ -96,7 +96,7 @@
       </v-list>
     </v-navigation-drawer>
 
-    <v-container>
+    <div v-show="buckets && showViewer" class="mt-2">
       <div class="d-flex justify-space-between">
         <span class="font-weight-bold text-uppercase text-grey-darken-2">
           Items Selected: <span id="items-selected" class="text-red-darken-2">0</span>
@@ -105,7 +105,7 @@
           Navigation Tool: <span id="navigation-tool" class="text-red-darken-2">orbit</span>
         </span>
       </div>
-    </v-container>
+    </div>
 
     <Loader ref="loader" :show="loader"/>
 
@@ -268,7 +268,7 @@ export default {
       const viewerWrap = document.querySelector(".adsk-viewing-viewer");
       if (!viewerWrap) return;
 
-      viewerWrap.style.maxHeight = '800px';
+      viewerWrap.style.maxHeight = '775px';
       viewerWrap.style.position = "relative";
     } 
   },
@@ -281,7 +281,7 @@ export default {
 
 <style>
   #forgeViewer {
-    margin-top: 25px;
+    margin-top: 10px;
   }
   .bucket.v-col {
     padding-top: 5px;
@@ -308,5 +308,11 @@ export default {
     top: 50%;
     left: 50%;
     transform: translate(80px, 0);
+  }
+  .show-env-bg-button {
+    background: #C62828;
+  }
+  .hide-env-bg-button {
+    background: #2a73c5;
   }
 </style>

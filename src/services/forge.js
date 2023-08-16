@@ -288,7 +288,7 @@ const InitializeViewer = async () => {
   Autodesk.Viewing.Initializer(options, function () {
     // Adding extensions
     const config3d = {
-      extensions: [ 'AwesomeExtension', 'EventReactExtension' ]
+      extensions: [ 'AwesomeExtension', 'EventReactExtension', 'ToolbarExtension' ]
     }
 
     const htmlDiv = document.getElementById('forgeViewer');
